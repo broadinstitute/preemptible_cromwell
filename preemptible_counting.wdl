@@ -12,7 +12,7 @@ task preemptible_couting {
         echo $random
         mkdir -p local_ckpt_dir
         local_ckpt_file=./local_ckpt_dir/$random.ckpt
-        remote_ckpt_file=gs://ld-tmp-storage/Cromwell_CKPT/$random.ckpt
+        remote_ckpt_file=~{remote_ckpt_location}/$random.ckpt
         echo $local_ckpt_file
         echo $remote_ckpt_file
 
