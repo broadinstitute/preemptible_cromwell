@@ -9,3 +9,5 @@ Run locally by typing:
 Run on the cloud by typing:
 
 > cromshell submit preemptible_counting.wdl parameters.json 
+
+THE CURRENT IMPLEMENTATION HAS BEEN TESTED WITH BOTH cromwell_server_47 and cromwell_server_51
