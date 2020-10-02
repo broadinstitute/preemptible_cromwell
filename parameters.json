@@ -1,4 +1,3 @@
 {
-  "preemptible.random_hash": "dasd_xs234"
+  "preemptible.remote_ckpt_location": "gs://ld-tmp-storage/Cromwell_CKPT"
 }
-
