@@ -2,17 +2,17 @@ version 1.0
 
 task preemptible_couting {
     input {
-        String remote_ckpt_location
+        Int ckpt_frequency
     }
 
     command <<<
 
-        # Prepare the local ckpt directory
-        random=$(cat script | grep mkfifo | grep -o '[a-z0-9]*\"$' | sed 's/"$//' | sed 's/err//')
-        echo $random
+        # Prepare the local and remote ckpt directory
+        
         mkdir -p local_ckpt_dir
-        local_ckpt_file=./local_ckpt_dir/$random.ckpt
-        remote_ckpt_file=~{remote_ckpt_location}/$random.ckpt
+        local_ckpt_file=./local_ckpt_dir/ckpt
+        remote_ckpt_dir=$(cat gcs_delocalization.sh | grep -o 'gs:\/\/.*stdout"' | grep -o 'gs:\/\/.*\/call[^\/]*')
+        remote_ckpt_file=$remote_ckpt_dir/ckpt
         echo $local_ckpt_file
         echo $remote_ckpt_file
 
@@ -31,9 +31,11 @@ task preemptible_couting {
         # Loop that simulat the real work and the copying from local to remote
         while ((n < 100 )); do
           echo $n
-          echo $n > $local_ckpt_file
-          gsutil -m cp $local_ckpt_file $remote_ckpt_file
-          sleep 5
+          if [ $((n % ~{ckpt_frequency} )) -eq 0 ]; then
+             echo $n > $local_ckpt_file
+             gsutil -m cp $local_ckpt_file $remote_ckpt_file
+          fi
+          sleep 6
           n=$((n+1))
         done
 
@@ -53,12 +55,12 @@ task preemptible_couting {
 workflow preemptible {
 
     input {
-        String remote_ckpt_location
+        Int ckpt_frequency
     }
     
     call preemptible_couting {
         input :
-            remote_ckpt_location = remote_ckpt_location 
+            ckpt_frequency = ckpt_frequency
     }
 
 }
