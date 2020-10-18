@@ -1,3 +1,4 @@
 {
   "preemptible.ckpt_frequency": 6
+  "preemptible.start_script" : "gs://ld-tmp-storage/cromwell_start_script.sh"
 }
