@@ -1,6 +1,6 @@
 # cromwell_preemptible
 
-simple WDL script to demonstrate the use with preemptible machines. \\
+simple WDL script to demonstrate the use with preemptible machines. \
 The strategy is to periodically create ckpt files which are then copied to a remote bucket.
 If pre-emption occurs the remote ckpt is copied back to the new VM and execution resumes from where it was left off.
 
