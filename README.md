@@ -8,10 +8,10 @@ This strategy is summarized in the figure below:
 ![strategy.png](https://github.com/broadinstitute/preemptible_cromwell/blob/master/images/strategy.png?raw=true)
 
 It is based on 4 functions:
-1. create_local_ckpt
+1. save_local_ckpt
 2. load_local_ckpt
-3. local_to_remote_ckpt (which runs periodically and copy to remote bucket only if the local ckpt has changed)
-4. remote_to_local_ckpt (which runs only once when VM starts)
+3. local_to_remote_ckpt 
+4. remote_to_local_ckpt 
 
 The first two functions are task specific and the end-users need to write them explicitely in the task section of the WDL. \
 The last two functions are completely generic and will be taken care automatically.
