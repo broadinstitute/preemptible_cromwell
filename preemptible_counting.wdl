@@ -20,11 +20,11 @@ task preemptible_couting {
         # Load ckpt or start from scratch
         if [ -f "$LOCAL_CKPT_FILE" ]; then
            echo "initialize from local ckpt"
-           # insert here your load from ckpt function
+           # insert here your "load_local_ckpt" function
            n=$(cat $LOCAL_CKPT_FILE)
         else
            echo "initialize from scrath"
-           # insert here your start from scratch function 
+           # insert here your "start_from_scratch" function 
            n=0
         fi
 
@@ -33,7 +33,7 @@ task preemptible_couting {
         while ((n < 100 )); do
           echo $n
           if [ $((n % ~{ckpt_frequency} )) -eq 0 ]; then
-             # insert here your function which creates the local ckpt file
+             # insert here your "save_local_ckpt" function
              echo $n > $LOCAL_CKPT_FILE
           fi
           sleep 2
