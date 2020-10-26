@@ -4,7 +4,8 @@ Simple WDL script to demonstrate the use with preemptible machines. \
 The strategy is to periodically create ckpt files which are then copied to a remote bucket. \
 If pre-emption occurs the remote ckpt is copied back to the new VM and execution resumes from where it was left off.
 
-This strategy is summarized in the figure below:
+To achieve this goal we "hack" the monitoring script which now becomes a monitoring and checkpointing script. \
+The strategy is summarized in the figure below:
 ![strategy.png](https://github.com/broadinstitute/preemptible_cromwell/blob/master/images/strategy.png?raw=true)
 
 It is based on 4 functions:
