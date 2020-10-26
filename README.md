@@ -22,12 +22,12 @@ You need to:
 2. place the cromwell_monitor_ckpt_script.sh in google cloud storage and invoke it by adding 
    the following line to your cromwell workflow 
    options:
-   "monitoring_script": "gs://bucket/path/to/cromwell_monitoring_script.sh"
+   "monitoring_script": "gs://bucket/path/to/cromwell_monitor_ckpt_script.sh"
 
 To run the example type:
 
 > cromshell submit preemptible_counting.wdl parameters.json option.json 
 
-The two version of the ckpt script (cromwell_monitoring_script.sh, cromwell_monitoring_script2.sh) are based off the two corresponding version of the monitoring script. Use either one of them.
+The two version of the ckpt script (cromwell_monitor_ckpt_script.sh, cromwell_monitor_ckpt_script2.sh) are based off the two corresponding version of the monitoring script. Use either one of them.
 
 THE CURRENT IMPLEMENTATION HAS BEEN TESTED WITH BOTH cromwell_server_47 and cromwell_server_51
