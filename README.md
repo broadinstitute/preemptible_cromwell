@@ -24,4 +24,6 @@ To run the example type:
 
 > cromshell submit preemptible_counting.wdl parameters.json option.json 
 
+The two version of the ckpt script (cromwell_monitoring_script.sh, cromwell_monitoring_script2.sh) are based off the two corresponding version of the monitoring script. Use either one of them.
+
 THE CURRENT IMPLEMENTATION HAS BEEN TESTED WITH BOTH cromwell_server_47 and cromwell_server_51
