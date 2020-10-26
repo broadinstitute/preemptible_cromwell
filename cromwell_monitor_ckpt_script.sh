@@ -9,6 +9,9 @@ set -Eeuo pipefail
 
 MONITOR_MOUNT_POINT=${MONITOR_MOUNT_POINT:-"/cromwell_root"}
 SLEEP_TIME=${SLEEP_TIME:-"10"}
+DUMMY_FILE=${DUMMY_FILE:-"/cromwell_root/dummy_file.tmp"}
+LOCAL_CKPT_FILE=${LOCAL_CKPT_FILE:-"/cromwell_root/ckpt"}
+
 
 function getCpuUsage() {
     # get the summary cpu statistics (i.e. for all cpus) since boot
@@ -240,6 +243,43 @@ function runtimeInfo() {
     echo \* Read/Write IO: $(getBlockDeviceIO "$BLOCK_DEVICE_STAT_FILE")
 }
 
+
+function remote_to_local_ckpt() {
+    remote_ckpt_dir=$(cat gcs_delocalization.sh | grep -o 'gs:\/\/.*stdout"' | grep -o 'gs:\/\/.*\/call[^\/]*')
+    export REMOTE_CKPT_FILE="$remote_ckpt_dir/ckpt"
+    export LOCAL_CKPT_TIMESTAMP="xxxxxxxx"
+    
+    # At the beginning copy from remote to local (if exists)
+    export GCS_OAUTH_TOKEN='gcloud auth application-default print-access-token'
+    return_code=$(gsutil -q stat $REMOTE_CKPT_FILE; echo $?)  # 0=exist, 1=does not exists
+    if [ $return_code == '0' ]; then
+        echo "remote_ckpt EXISTS"
+        gsutil -m cp $REMOTE_CKPT_FILE $LOCAL_CKPT_FILE 
+    else
+        echo "remote_ckpt DOES NOT EXIST"
+    fi
+    touch $DUMMY_FILE 
+    echo 
+    echo 
+}
+
+function local_to_remote_ckpt() {
+    if [ -f "$LOCAL_CKPT_FILE" ]; then
+       current_ckpt_timestamp=$(ls -l $LOCAL_CKPT_FILE | awk '{print $(NF-1)}')
+       if [ "$current_ckpt_timestamp" != "$LOCAL_CKPT_TIMESTAMP" ]; then
+          echo "delocalizing local_ckpt"
+          export LOCAL_CKPT_TIMESTAMP="$current_ckpt_timestamp"
+          gsutil -m cp $LOCAL_CKPT_FILE $REMOTE_CKPT_FILE
+       fi
+    fi
+}        
+
+# First thing is to run the localization 
+echo ==================================
+echo ========= CheckPointing ==========
+echo ==================================
+remote_to_local_ckpt
+
 # print out header info
 echo ==================================
 echo =========== MONITORING ===========
@@ -286,5 +326,6 @@ getCpuUsage > /dev/null
 
 while true; do
     runtimeInfo
+    local_to_remote_ckpt
     sleep $SLEEP_TIME
 done

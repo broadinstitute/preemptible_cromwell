@@ -1,0 +1,3 @@
+{
+ "monitoring_script": "gs://ld-tmp-storage/cromwell_monitor_ckpt_script.sh"
+}

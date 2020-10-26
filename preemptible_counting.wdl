@@ -6,36 +6,37 @@ task preemptible_couting {
     }
 
     command <<<
-
-        # Prepare the local and remote ckpt directory
         
-        mkdir -p local_ckpt_dir
-        local_ckpt_file=./local_ckpt_dir/ckpt
-        remote_ckpt_dir=$(cat gcs_delocalization.sh | grep -o 'gs:\/\/.*stdout"' | grep -o 'gs:\/\/.*\/call[^\/]*')
-        remote_ckpt_file=$remote_ckpt_dir/ckpt
-        echo $local_ckpt_file
-        echo $remote_ckpt_file
+        # Trick to wait till startup script finishes execution
+        TMP_FILE=./dummy_file.tmp  # do not change this name. Startup script depends on it 
+        LOCAL_CKPT_FILE=./ckpt     # do not change this name. Startup script depends on it
+        iter=0
+        while [ ! -f "$TMP_FILE" -a "$iter" -lt 100 ]
+        do
+           sleep 2
+           iter=$((iter+1))
+        done
 
-        # At the beginning copy from remote to local (if exists)
-        export GCS_OAUTH_TOKEN='gcloud auth application-default print-access-token'
-        return_code=$(gsutil -q stat $remote_ckpt_file; echo $?)  # 0=exist, 1=does not exists
-        if [ $return_code == '0' ]; then
-            echo "remote_ckpt EXISTS"
-            gsutil cp $remote_ckpt_file $local_ckpt_file
-            n=$(cat $local_ckpt_file)
+        # Load ckpt or start from scratch
+        if [ -f "$LOCAL_CKPT_FILE" ]; then
+           echo "initialize from local ckpt"
+           # insert here your load from ckpt function
+           n=$(cat $LOCAL_CKPT_FILE)
         else
-            echo "remote_ckpt DOES NOT EXIST"
-            n=0
+           echo "initialize from scrath"
+           # insert here your start from scratch function 
+           n=0
         fi
 
-        # Loop that simulat the real work and the copying from local to remote
+
+        # Loop that simulate the real work and create a local ckpt
         while ((n < 100 )); do
           echo $n
           if [ $((n % ~{ckpt_frequency} )) -eq 0 ]; then
-             echo $n > $local_ckpt_file
-             gsutil -m cp $local_ckpt_file $remote_ckpt_file
+             # insert here your function which creates the local ckpt file
+             echo $n > $LOCAL_CKPT_FILE
           fi
-          sleep 6
+          sleep 2
           n=$((n+1))
         done
 
