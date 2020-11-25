@@ -10,7 +10,7 @@ set -Eeuo pipefail
 MONITOR_MOUNT_POINT=${MONITOR_MOUNT_POINT:-"/cromwell_root"}
 SLEEP_TIME=${SLEEP_TIME:-"10"}
 DUMMY_FILE=${DUMMY_FILE:-"/cromwell_root/dummy_file.tmp"}
-LOCAL_CKPT_FILE=${LOCAL_CKPT_FILE:-"/cromwell_root/ckpt"}
+LOCAL_CKPT_DIR=${LOCAL_CKPT_DIR:-"/cromwell_root"}
 
 function getCpuUsage() {
     # get the summary cpu statistics (i.e. for all cpus) since boot
@@ -207,34 +207,63 @@ function runtimeInfo() {
 }
 
 function remote_to_local_ckpt() {
-  remote_ckpt_dir=$(cat gcs_delocalization.sh | grep -o 'gs:\/\/.*stdout"' | grep -o 'gs:\/\/.*\/call[^\/]*')
-  export REMOTE_CKPT_FILE="$remote_ckpt_dir/ckpt"
-  export LOCAL_CKPT_TIMESTAMP="xxxxxxxx"
+    # Initialization
+    export LOCAL_CKPT_TIMESTAMP="xxxxxxxx"
+    remote_ckpt_dir=$(cat gcs_delocalization.sh | grep -o 'gs:\/\/.*stdout"' | grep -o 'gs:\/\/.*\/call[^\/]*')
 
-  # At the beginning copy from remote to local (if exists)
-  export GCS_OAUTH_TOKEN='gcloud auth application-default print-access-token'
-  return_code=$(gsutil -q stat $REMOTE_CKPT_FILE; echo $?)  # 0=exist, 1=does not exists
-  if [ $return_code == '0' ]; then
-      echo "remote_ckpt EXISTS"
-      gsutil -m cp $REMOTE_CKPT_FILE $LOCAL_CKPT_FILE
-  else
-      echo "remote_ckpt DOES NOT EXIST"
-  fi
-  touch $DUMMY_FILE
-  echo
-  echo
+    # Defaults name if DUMMY_FILE is not found
+    ckpt_file_name="ckpt"
+    export LOCAL_CKPT_FILE="$LOCAL_CKPT_DIR/$ckpt_file_name"
+    export REMOTE_CKPT_FILE="$remote_ckpt_dir/$ckpt_file_name"
+
+    # read ckpt_file_name from the DUMMY_FILE
+    iter=0
+    while [ "$iter" -lt 100 ]
+    do
+      if [ -f "$DUMMY_FILE" ]; then
+        ckpt_file_name=$(cat $DUMMY_FILE)
+        export LOCAL_CKPT_FILE="$LOCAL_CKPT_DIR/$ckpt_file_name"
+        export REMOTE_CKPT_FILE="$remote_ckpt_dir/$ckpt_file_name"
+        break
+      else
+        sleep 2
+        iter=$((iter+1))
+      fi
+    done
+
+    # DEBUG
+    # echo "in script $REMOTE_CKPT_FILE $LOCAL_CKPT_FILE $LOCAL_CKPT_TIMESTAMP"
+
+    # At the beginning copy from remote to local (if exists)
+    export GCS_OAUTH_TOKEN='gcloud auth application-default print-access-token'
+    return_code=$(gsutil -q stat $REMOTE_CKPT_FILE; echo $?)  # 0=exist, 1=does not exists
+    if [ $return_code == '0' ]; then
+        echo "remote_ckpt EXISTS"
+        gsutil -m cp $REMOTE_CKPT_FILE $LOCAL_CKPT_FILE
+    else
+        echo "remote_ckpt DOES NOT EXIST"
+    fi
+
+    # Erase the dummy_file so that the the script knows that this step is completed
+    if [ -f "$DUMMY_FILE" ]; then
+      rm -rf $DUMMY_FILE
+    fi
+    echo
+    echo
 }
 
 function local_to_remote_ckpt() {
     if [ -f "$LOCAL_CKPT_FILE" ]; then
        current_ckpt_timestamp=$(ls -l $LOCAL_CKPT_FILE | awk '{print $(NF-1)}')
        if [ "$current_ckpt_timestamp" != "$LOCAL_CKPT_TIMESTAMP" ]; then
-          echo "delocalizing local_ckpt"
+          # echo "delocalizing local_ckpt"
           export LOCAL_CKPT_TIMESTAMP="$current_ckpt_timestamp"
           gsutil -m cp $LOCAL_CKPT_FILE $REMOTE_CKPT_FILE
        fi
     fi
 }
+
+
 
 # First thing is to run the localization
 echo --- CheckPointing ---

@@ -6,16 +6,19 @@ task preemptible_couting {
     }
 
     command <<<
-        
-        # Trick to wait till startup script finishes execution
-        TMP_FILE=./dummy_file.tmp  # do not change this name. Startup script depends on it 
-        LOCAL_CKPT_FILE=./ckpt     # do not change this name. Startup script depends on it
+
+        # First thing is to select the name of the local_ckpt you want to use
+        LOCAL_CKPT_FILE="ckpt.tar.gz"
+
+        # Do not touch this block which is used for synchronization with the checkpoint script
+        echo $LOCAL_CKPT_FILE > dummy_file.tmp
         iter=0
-        while [ ! -f "$TMP_FILE" -a "$iter" -lt 100 ]
+        while [ -f ./dummy_file.tmp -a "$iter" -lt 100 ]
         do
            sleep 2
            iter=$((iter+1))
         done
+
 
         # Load ckpt or start from scratch
         if [ -f "$LOCAL_CKPT_FILE" ]; then

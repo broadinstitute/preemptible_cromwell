@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="b42f3848-46e5-467c-9cf1-16bb5856f977" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cromwell_monitor_ckpt_script.sh" beforeDir="false" afterPath="$PROJECT_DIR$/cromwell_monitor_ckpt_script.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cromwell_monitor_ckpt_script2.sh" beforeDir="false" afterPath="$PROJECT_DIR$/cromwell_monitor_ckpt_script2.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/preemptible_counting.wdl" beforeDir="false" afterPath="$PROJECT_DIR$/preemptible_counting.wdl" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectId" id="1kn2MPtBrcFBmHN6ybrp9GPcd0B" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="b42f3848-46e5-467c-9cf1-16bb5856f977" name="Default Changelist" comment="" />
+      <created>1606321985637</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1606321985637</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="311" y="198" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1606344035153">
+      <screen x="0" y="23" width="1680" height="1027" />
+    </state>
+    <state x="311" y="198" key="#com.intellij.execution.impl.EditConfigurationsDialog/-72.-1057.1920.1057/0.23.1680.1027@0.23.1680.1027" timestamp="1606344035153" />
+    <state x="511" y="250" width="670" height="676" key="search.everywhere.popup" timestamp="1606343867579">
+      <screen x="0" y="23" width="1680" height="1027" />
+    </state>
+    <state x="511" y="250" width="670" height="676" key="search.everywhere.popup/-72.-1057.1920.1057/0.23.1680.1027@0.23.1680.1027" timestamp="1606343867579" />
+  </component>
+</project>
