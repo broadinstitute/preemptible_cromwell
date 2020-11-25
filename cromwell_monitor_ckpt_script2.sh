@@ -10,7 +10,7 @@ set -Eeuo pipefail
 MONITOR_MOUNT_POINT=${MONITOR_MOUNT_POINT:-"/cromwell_root"}
 SLEEP_TIME=${SLEEP_TIME:-"10"}
 DUMMY_FILE=${DUMMY_FILE:-"/cromwell_root/dummy_file.tmp"}
-LOCAL_CKPT_FILE=${LOCAL_CKPT_FILE:-"/cromwell_root/ckpt"}
+LOCAL_CKPT_FILE=${LOCAL_CKPT_FILE:-"/cromwell_root/ckpt.tar.gz"}
 
 function getCpuUsage() {
     # get the summary cpu statistics (i.e. for all cpus) since boot

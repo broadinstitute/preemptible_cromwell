@@ -8,8 +8,8 @@ task preemptible_couting {
     command <<<
         
         # Trick to wait till startup script finishes execution
-        TMP_FILE=./dummy_file.tmp  # do not change this name. Startup script depends on it 
-        LOCAL_CKPT_FILE=./ckpt     # do not change this name. Startup script depends on it
+        TMP_FILE=./dummy_file.tmp      # do not change this name. Startup script depends on it
+        LOCAL_CKPT_FILE=./ckpt.tar.gz  # do not change this name. Startup script depends on it
         iter=0
         while [ ! -f "$TMP_FILE" -a "$iter" -lt 100 ]
         do
