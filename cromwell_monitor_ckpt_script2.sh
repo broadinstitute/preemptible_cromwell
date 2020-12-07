@@ -8,9 +8,10 @@
 set -Eeuo pipefail
 
 MONITOR_MOUNT_POINT=${MONITOR_MOUNT_POINT:-"/cromwell_root"}
-SLEEP_TIME=${SLEEP_TIME:-"10"}
+SLEEP_TIME=${SLEEP_TIME:-"1"}
 DUMMY_FILE=${DUMMY_FILE:-"/cromwell_root/dummy_file.tmp"}
 LOCAL_CKPT_FILE=${LOCAL_CKPT_FILE:-"/cromwell_root/ckpt.tar.gz"}
+REMOTE_CKPT_FILENAME=${REMOTE_CKPT_FILENAME:-"ckpt.tar.gz"}
 
 function getCpuUsage() {
     # get the summary cpu statistics (i.e. for all cpus) since boot
@@ -208,7 +209,7 @@ function runtimeInfo() {
 
 function remote_to_local_ckpt() {
   remote_ckpt_dir=$(cat gcs_delocalization.sh | grep -o 'gs:\/\/.*stdout"' | grep -o 'gs:\/\/.*\/call[^\/]*')
-  export REMOTE_CKPT_FILE="$remote_ckpt_dir/ckpt"
+  export REMOTE_CKPT_FILE="$remote_ckpt_dir/$REMOTE_CKPT_FILENAME"
   export LOCAL_CKPT_TIMESTAMP="xxxxxxxx"
 
   # At the beginning copy from remote to local (if exists)
