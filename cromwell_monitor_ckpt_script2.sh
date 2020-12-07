@@ -27,10 +27,10 @@ function getCpuUsage() {
     done
 
     # get the previous times from temp file
-    read PREVIOUS_IDLE PREVIOUS_TOTAL < $TEMP_CPU
+    read PREVIOUS_IDLE PREVIOUS_TOTAL < ${TEMP_CPU}
 
     # write current times to temp file
-    echo "$IDLE_TIME $TOTAL_TIME" > $TEMP_CPU
+    echo "${IDLE_TIME} ${TOTAL_TIME}" > ${TEMP_CPU}
 
     # get the difference in idle and total times since the previous
     # update, and report the usage as: non-idle time as a percentage
@@ -74,9 +74,9 @@ function getDisk() {
     MOUNT_POINT=$2
     # extract desired value
     VALUE=$(\
-        df -h "$MOUNT_POINT" \
+        df -h "${MOUNT_POINT}" \
         | sed 's/Mounted on/Mounted-on/' \
-        | awk -v DISK_COLUMN=$DISK_COLUMN '
+        | awk -v DISK_COLUMN=${DISK_COLUMN} '
             FNR==1 {
                 NF_HEADER=NF
                 for(i=1; i<=NF; i++) { f[tolower($i)]=NF-i }
@@ -96,8 +96,8 @@ function getDisk() {
     # and needs to be converted.
     # If value is a %, print the number and strip the value
     # Otherwise just print value
-    if [[ "$VALUE" =~ [0-9.]+[%a-zA-Z]+ ]]; then
-        echo "$VALUE"\
+    if [[ "${VALUE}" =~ [0-9.]+[%a-zA-Z]+ ]] ; then
+        echo "${VALUE}"\
         | sed -E 's/([0-9.]*)([^0-9.]*)/\1 \2/' \
         | awk '{
             UNIT=substr($2, 1, 1)
@@ -117,34 +117,34 @@ function getDisk() {
             printf "%.1f", $1 * SCALE
         }'
     else
-        echo "$VALUE"
+        echo "${VALUE}"
     fi
 }
 
 function findBlockDevice() {
     MOUNT_POINT=$1
-    FILESYSTEM=$(grep -E "$MOUNT_POINT\s" /proc/self/mounts \
+    FILESYSTEM=$(grep -E "${MOUNT_POINT}\s" /proc/self/mounts \
                 | awk '{print $1}')
-    DEVICE_NAME=$(basename "$FILESYSTEM")
+    DEVICE_NAME=$(basename "${FILESYSTEM}")
     FS_IN_BLOCK=$(find -L /sys/block/ -mindepth 2 -maxdepth 2 -type d \
-                       -name "$DEVICE_NAME")
-    if [ -n "$FS_IN_BLOCK" ]; then
+                       -name "${DEVICE_NAME}")
+    if [[ -n "${FS_IN_BLOCK}" ]] ; then
         # found path to the filesystem in the block devices. get the
         # block device as the parent dir
-        dirname "$FS_IN_BLOCK"
-    elif [ -d "/sys/block/$DEVICE_NAME" ]; then
+        dirname "${FS_IN_BLOCK}"
+    elif [[ -d "/sys/block/${DEVICE_NAME}" ]] ; then
         # the device is itself a block device
-        echo "/sys/block/$DEVICE_NAME"
+        echo "/sys/block/${DEVICE_NAME}"
     else
         # couldn't find, possibly mounted by mapper.
         # look for block device that is just the name of the symlinked
         # original file. if not found, echo empty string (no device found)
-        BLOCK_DEVICE=$(ls -l "$FILESYSTEM" 2>/dev/null \
+        BLOCK_DEVICE=$(ls -l "${FILESYSTEM}" 2>/dev/null \
                         | cut -d'>' -f2 \
                         | xargs basename 2>/dev/null \
                         || echo)
-        if [[ -z "$BLOCK_DEVICE" ]]; then
-            1>&2 echo "Unable to find block device for filesystem $FILESYSTEM."
+        if [[ -z "${BLOCK_DEVICE}" ]]; then
+            1>&2 echo "Unable to find block device for filesystem ${FILESYSTEM}."
             if [[ -d /sys/block/sdb ]] && ! grep -qE "^/dev/sdb" /etc/mtab; then
                 1>&2 echo "Guessing present but unused sdb is the correct block device."
                 echo "/sys/block/sdb"
@@ -156,7 +156,7 @@ function findBlockDevice() {
 }
 
 function handle_integer_wrap() {
-    if [ $1 -ge 0 ]; then
+    if [[ $1 -ge 0 ]] ; then
         echo $1
     else
         WRAPPED=$1
@@ -167,22 +167,22 @@ function handle_integer_wrap() {
 function getBlockDeviceIO() {
     # get read and write IO rate by looking at appropriate block device
     STAT_FILE="$1"
-    if [[ -f "$STAT_FILE" ]]; then
+    if [[ -f "${STAT_FILE}" ]] ; then
         # get IO stats as comma-separated list to extract 3rd and 7th fields
-        STATS=$(sed -E 's/[[:space:]]+/,/g' $STAT_FILE | sed -E 's/^,//'\
+        STATS=$(sed -E 's/[[:space:]]+/,/g' ${STAT_FILE} | sed -E 's/^,//'\
                 | cut -d, -f3,7 | sed -E 's/,/ /g')
         # get results of previous poll
-        read OLD_READ OLD_WRITE < $TEMP_IO
+        read OLD_READ OLD_WRITE < ${TEMP_IO}
         # save new poll results
-        read READ_SECTORS WRITE_SECTORS <<<$STATS
-        echo "$READ_SECTORS $WRITE_SECTORS" > $TEMP_IO
+        read READ_SECTORS WRITE_SECTORS <<<${STATS}
+        echo "${READ_SECTORS} ${WRITE_SECTORS}" > ${TEMP_IO}
         # update read and write sectors as difference since previous poll
         READ_SECTORS=$(handle_integer_wrap $((READ_SECTORS - OLD_READ)))
         WRITE_SECTORS=$(handle_integer_wrap $((WRITE_SECTORS - OLD_WRITE)))
 
         # output change in read/write sectors in MiB/s
         echo "$READ_SECTORS $WRITE_SECTORS" \
-            | awk -v T=$SLEEP_TIME -v B=$SECTOR_BYTES \
+            | awk -v T=${SLEEP_TIME} -v B=${SECTOR_BYTES} \
                 '{ printf "%.3f\t%.3f",  $1*B/T/1048576, $2*B/T/1048576 }'
     else
         printf "nan\tnan"
@@ -198,41 +198,41 @@ function elapsed_time() {
     S=$((T_ELAPSED % 60))
     H=$((M / 60))
     M=$((M % 60))
-    printf "%02d:%02d:%02d" $H $M $S
+    printf "%02d:%02d:%02d" ${H} ${M} ${S}
 }
 
 function runtimeInfo() {
     printf "%s\t%s\t%s\t%s\t%s\t%s\n" "$(elapsed_time)" "$(getCpuUsage)" "$(getMemUnavailable)" \
-      "$(getDisk Used $MONITOR_MOUNT_POINT)" "$(getDisk Use% $MONITOR_MOUNT_POINT)" \
-      "$(getBlockDeviceIO "$BLOCK_DEVICE_STAT_FILE")"
+      "$(getDisk Used ${MONITOR_MOUNT_POINT})" "$(getDisk Use% ${MONITOR_MOUNT_POINT})" \
+      "$(getBlockDeviceIO "${BLOCK_DEVICE_STAT_FILE}")"
 }
 
 function remote_to_local_ckpt() {
   remote_ckpt_dir=$(cat gcs_delocalization.sh | grep -o 'gs:\/\/.*stdout"' | grep -o 'gs:\/\/.*\/call[^\/]*')
-  export REMOTE_CKPT_FILE="$remote_ckpt_dir/$REMOTE_CKPT_FILENAME"
+  export REMOTE_CKPT_FILE="${remote_ckpt_dir}/${REMOTE_CKPT_FILENAME}"
   export LOCAL_CKPT_TIMESTAMP="xxxxxxxx"
 
   # At the beginning copy from remote to local (if exists)
   export GCS_OAUTH_TOKEN='gcloud auth application-default print-access-token'
-  return_code=$(gsutil -q stat $REMOTE_CKPT_FILE; echo $?)  # 0=exist, 1=does not exists
-  if [ $return_code == '0' ]; then
+  return_code=$(gsutil -q stat ${REMOTE_CKPT_FILE}; echo $?)  # 0=exist, 1=does not exists
+  if [[ ${return_code} == '0' ]] ; then
       echo "remote_ckpt EXISTS"
-      gsutil -m cp $REMOTE_CKPT_FILE $LOCAL_CKPT_FILE
+      gsutil -m cp ${REMOTE_CKPT_FILE} ${LOCAL_CKPT_FILE}
   else
       echo "remote_ckpt DOES NOT EXIST"
   fi
-  touch $DUMMY_FILE
+  touch ${DUMMY_FILE}
   echo
   echo
 }
 
 function local_to_remote_ckpt() {
-    if [ -f "$LOCAL_CKPT_FILE" ]; then
-       current_ckpt_timestamp=$(ls -l $LOCAL_CKPT_FILE | awk '{print $(NF-1)}')
-       if [ "$current_ckpt_timestamp" != "$LOCAL_CKPT_TIMESTAMP" ]; then
+    if [[ -f "$LOCAL_CKPT_FILE" ]]; then
+       current_ckpt_timestamp=$(ls -l ${LOCAL_CKPT_FILE} | awk '{print $(NF-1)}')
+       if [[ "${current_ckpt_timestamp}" != "${LOCAL_CKPT_TIMESTAMP}" ]] ; then
           echo "delocalizing local_ckpt"
-          export LOCAL_CKPT_TIMESTAMP="$current_ckpt_timestamp"
-          gsutil -m cp $LOCAL_CKPT_FILE $REMOTE_CKPT_FILE
+          export LOCAL_CKPT_TIMESTAMP="${current_ckpt_timestamp}"
+          gsutil -m cp ${LOCAL_CKPT_FILE} ${REMOTE_CKPT_FILE}
        fi
     fi
 }
@@ -246,7 +246,7 @@ echo --- General Information ---
 echo Num processors: $(nproc)
 echo Total Memory: $(getMem MemTotal)
 echo Total Disk space: $(getDisk Size "$MONITOR_MOUNT_POINT") GiB
-echo Start time: $(date "+%F %T %z" -d @$T_START)
+echo Start time: $(date "+%F %T %z" -d @${T_START})
 echo --- Runtime Information ---
 echo -e "ElapsedTime\tCPU\tMem\tMemPct\tDisk\tDiskPct\tIORead\tIOWrite"
 echo -e "HH:MM:SS   \t%\tGiB\t%\tGiB\t%\tMiB/s\tMiB/s"
@@ -256,13 +256,13 @@ TEMP_IO=$(mktemp "${TMPDIR:-/tmp/}$(basename $0).XXXXXXXXXXXX")
 # make a temp file to store cpu information, remove it on exit
 # remove temp files on exit
 TEMP_CPU=$(mktemp "${TMPDIR:-/tmp/}$(basename $0).XXXXXXXXXXXX")
-trap "rm -f $TEMP_IO $TEMP_CPU" EXIT
+trap "rm -f ${TEMP_IO} ${TEMP_CPU}" EXIT
 
 
 # find the block device
 BLOCK_DEVICE=$(findBlockDevice "$MONITOR_MOUNT_POINT")
 if [[ -z "$BLOCK_DEVICE" ]] \
-        || [[ ! -f "$BLOCK_DEVICE/queue/hw_sector_size" ]]; then
+        || [[ ! -f "$BLOCK_DEVICE/queue/hw_sector_size" ]] ; then
     # no block device found, can't get IO info
     SECTOR_BYTES=0
     BLOCK_DEVICE_STAT_FILE=""
@@ -274,16 +274,16 @@ fi
 
 # since getCpuUsage looks at differences in stat file, run the update so
 # the first reported update has a sensible previous result to compare to
-echo "0 0" > $TEMP_CPU
+echo "0 0" > ${TEMP_CPU}
 getCpuUsage > /dev/null
 
 # same thing for getBlockDeviceIO
-echo "0 0" > $TEMP_IO
+echo "0 0" > ${TEMP_IO}
 getBlockDeviceIO "$BLOCK_DEVICE_STAT_FILE" > /dev/null
 
 
 while true; do
     runtimeInfo
     local_to_remote_ckpt
-    sleep $SLEEP_TIME
+    sleep ${SLEEP_TIME}
 done
