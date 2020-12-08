@@ -258,7 +258,11 @@ function local_to_remote_ckpt() {
        if [ "$current_ckpt_timestamp" != "$LOCAL_CKPT_TIMESTAMP" ]; then
           # echo "delocalizing local_ckpt"
           export LOCAL_CKPT_TIMESTAMP="$current_ckpt_timestamp"
-          gsutil -m cp $LOCAL_CKPT_FILE $REMOTE_CKPT_FILE
+
+          # split operation into 2 steps so that remote_ckpt_file is never corrupted 
+          # even if VM terminates during gsutil cp command
+          gsutil -m cp $LOCAL_CKPT_FILE $REMOTE_CKPT_FILE-tmp
+          gsutil mv $REMOTE_CKPT_FILE-tmp $REMOTE_CKPT_FILE
        fi
     fi
 }
