@@ -262,7 +262,7 @@ function local_to_remote_ckpt() {
           # split operation into 2 steps so that remote_ckpt_file is never corrupted 
           # even if VM terminates during gsutil cp command
           gsutil -m cp $LOCAL_CKPT_FILE $REMOTE_CKPT_FILE-tmp
-          gsutil mv $REMOTE_CKPT_FILE-tmp $REMOTE_CKPT_FILE
+          gsutil -m mv $REMOTE_CKPT_FILE-tmp $REMOTE_CKPT_FILE
        fi
     fi
 }
