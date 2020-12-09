@@ -227,12 +227,14 @@ function remote_to_local_ckpt() {
 }
 
 function local_to_remote_ckpt() {
-    if [[ -f "$LOCAL_CKPT_FILE" ]]; then
+    if [[ -f "${LOCAL_CKPT_FILE}" ]] ; then
        current_ckpt_timestamp=$(ls -l ${LOCAL_CKPT_FILE} | awk '{print $(NF-1)}')
        if [[ "${current_ckpt_timestamp}" != "${LOCAL_CKPT_TIMESTAMP}" ]] ; then
           echo "delocalizing local_ckpt"
           export LOCAL_CKPT_TIMESTAMP="${current_ckpt_timestamp}"
-          gsutil -m cp ${LOCAL_CKPT_FILE} ${REMOTE_CKPT_FILE}
+          gsutil cp ${LOCAL_CKPT_FILE} ${REMOTE_CKPT_FILE}-tmp
+          gsutil mv ${REMOTE_CKPT_FILE}-tmp ${REMOTE_CKPT_FILE}
+          echo "upload successful"
        fi
     fi
 }
