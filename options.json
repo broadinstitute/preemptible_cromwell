@@ -1,5 +1,5 @@
 {
-    "monitoring_script": "gs://broad-dsde-methods-sfleming/cromwell_monitor_ckpt_script2.sh",
-    "write_to_cache": false,
-    "read_from_cache": false,
+ "monitoring_script": "gs://broad-dsde-methods-sfleming/cromwell_monitor_ckpt_script2.sh",
+ "write_to_cache": false,
+ "read_from_cache": false
 }
