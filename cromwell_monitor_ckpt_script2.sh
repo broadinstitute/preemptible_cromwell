@@ -8,7 +8,7 @@
 set -Eeuo pipefail
 
 MONITOR_MOUNT_POINT=${MONITOR_MOUNT_POINT:-"/cromwell_root"}
-SLEEP_TIME=${SLEEP_TIME:-"1"}
+SLEEP_TIME=${SLEEP_TIME:-"120"}
 DUMMY_FILE=${DUMMY_FILE:-"/cromwell_root/dummy_file.tmp"}
 LOCAL_CKPT_FILE=${LOCAL_CKPT_FILE:-"/cromwell_root/ckpt.tar.gz"}
 REMOTE_CKPT_FILENAME=${REMOTE_CKPT_FILENAME:-"ckpt.tar.gz"}
@@ -232,8 +232,10 @@ function local_to_remote_ckpt() {
        if [[ "${current_ckpt_timestamp}" != "${LOCAL_CKPT_TIMESTAMP}" ]] ; then
           echo "delocalizing local_ckpt"
           export LOCAL_CKPT_TIMESTAMP="${current_ckpt_timestamp}"
+          set +e  # allow script to continue even if gsutil commands fail
           gsutil cp ${LOCAL_CKPT_FILE} ${REMOTE_CKPT_FILE}-tmp
           gsutil mv ${REMOTE_CKPT_FILE}-tmp ${REMOTE_CKPT_FILE}
+          set -e
           echo "upload successful"
        fi
     fi
