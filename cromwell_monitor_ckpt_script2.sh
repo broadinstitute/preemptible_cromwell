@@ -208,40 +208,53 @@ function runtimeInfo() {
 }
 
 function remote_to_local_ckpt() {
-  remote_ckpt_dir=$(cat gcs_delocalization.sh | grep -o 'gs:\/\/.*stdout"' | grep -o 'gs:\/\/.*\/call[^\/]*')
-  export REMOTE_CKPT_FILE="${remote_ckpt_dir}/${REMOTE_CKPT_FILENAME}"
-  export LOCAL_CKPT_TIMESTAMP="xxxxxxxx"
+    remote_ckpt_dir=$(cat gcs_delocalization.sh | grep -o 'gs:\/\/.*stdout"' | grep -o 'gs:\/\/.*\/call[^\/]*')
+    export REMOTE_CKPT_FILE="${remote_ckpt_dir}/${REMOTE_CKPT_FILENAME}"
+    export LOCAL_CKPT_TIMESTAMP="xxxxxxxx"
 
-  # At the beginning copy from remote to local (if exists)
-  export GCS_OAUTH_TOKEN='gcloud auth application-default print-access-token'
-  return_code=$(gsutil -q stat ${REMOTE_CKPT_FILE}; echo $?)  # 0=exist, 1=does not exists
-  if [[ ${return_code} == '0' ]] ; then
-      echo "remote_ckpt EXISTS"
-      gsutil -m cp ${REMOTE_CKPT_FILE} ${LOCAL_CKPT_FILE}
-  else
-      echo "remote_ckpt DOES NOT EXIST"
-  fi
-  touch ${DUMMY_FILE}
-  echo
-  echo
+    # At the beginning copy from remote to local (if exists)
+    export GCS_OAUTH_TOKEN='gcloud auth application-default print-access-token'
+    return_code=$(gsutil -q stat ${REMOTE_CKPT_FILE}; echo $?)  # 0=exist, 1=does not exists
+    if [[ ${return_code} == '0' ]] ; then
+        echo "Remote checkpoint ${REMOTE_CKPT_FILE} exists"
+        gsutil cp ${REMOTE_CKPT_FILE} ${LOCAL_CKPT_FILE}
+        # record the timestamp so this file is not touched by local_to_remote_ckpt() until overwritten
+        current_ckpt_timestamp=$(ls -l ${LOCAL_CKPT_FILE} | awk '{print $(NF-1)}')
+        export LOCAL_CKPT_TIMESTAMP="${current_ckpt_timestamp}"
+    else
+        echo "Remote checkpoint ${REMOTE_CKPT_FILE} does not exist"
+    fi
+    touch ${DUMMY_FILE}
+    echo
+    echo
 }
 
 function local_to_remote_ckpt() {
     if [[ -f "${LOCAL_CKPT_FILE}" ]] ; then
-       current_ckpt_timestamp=$(ls -l ${LOCAL_CKPT_FILE} | awk '{print $(NF-1)}')
-       if [[ "${current_ckpt_timestamp}" != "${LOCAL_CKPT_TIMESTAMP}" ]] ; then
-          echo "delocalizing local_ckpt"
-          export LOCAL_CKPT_TIMESTAMP="${current_ckpt_timestamp}"
-          cp ${LOCAL_CKPT_FILE} ${LOCAL_CKPT_FILE}-tmp  # ensure we don't over-write
-          set +e  # allow script to continue even if gsutil command fails
-          gsutil cp ${LOCAL_CKPT_FILE}-tmp ${REMOTE_CKPT_FILE}
-          set -e
-       fi
+        # wait for any processes modifying the file to complete
+        # https://askubuntu.com/questions/14252/how-in-a-script-can-i-determine
+        # -if-a-file-is-currently-being-written-to-by-ano
+        # TODO: lsof not installed...
+#        until ! [[ $(lsof -- ${LOCAL_CKPT_FILE}) ]] ; do
+#            sleep 0.5
+#        done
+        current_ckpt_timestamp=$(ls -l ${LOCAL_CKPT_FILE} | awk '{print $(NF-1)}')
+        if [[ "${current_ckpt_timestamp}" != "${LOCAL_CKPT_TIMESTAMP}" ]] ; then
+            EXT=".loctmp"  # extension for local temp file
+            mv ${LOCAL_CKPT_FILE} ${LOCAL_CKPT_FILE}${EXT}  # ensure file does not get over-written: fast!
+            cp ${LOCAL_CKPT_FILE}${EXT} ${LOCAL_CKPT_FILE}  # but keep that file around: slow step
+            echo "delocalizing local_ckpt"
+            export LOCAL_CKPT_TIMESTAMP="${current_ckpt_timestamp}"
+            set +e  # allow monitoring script to continue even if gsutil command fails
+            gsutil cp ${LOCAL_CKPT_FILE}${EXT} ${REMOTE_CKPT_FILE}
+            set -e
+            rm ${LOCAL_CKPT_FILE}${EXT}
+        fi
     fi
 }
 
 # First thing is to run the localization
-echo --- CheckPointing ---
+echo --- Checkpointing ---
 remote_to_local_ckpt
 
 # print out header info
