@@ -1,3 +1,5 @@
 {
- "monitoring_script": "gs://ld-tmp-storage/cromwell_monitor_ckpt_script.sh"
+ "monitoring_script": "gs://ld-tmp-storage/cromwell_monitor_ckpt_script.sh",
+ "write_to_cache": false,
+ "read_from_cache": false
 }
